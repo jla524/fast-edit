@@ -27,9 +27,9 @@ def _is_recent(file_dir: Path, days: int = 1) -> bool:
 
 def get_new_dir(origin_dir: Path, extension: str = ".mp4") -> Path:
     """
-    Create a new directory with the today's date
+    Create a new file directory with the today's date
     """
-    # output should be mp4 format by default
+    assert origin_dir.exists()
     new_name = datetime.today().strftime("%Y%m%d") + extension
     return origin_dir.parent / new_name
 
