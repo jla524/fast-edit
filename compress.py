@@ -30,7 +30,7 @@ def get_new_dir(origin_dir: Path, extension: str = ".mp4") -> Path:
     Create a new file directory with the today's date
     """
     assert origin_dir.exists()
-    new_name = datetime.today().strftime("%Y%m%d") + extension
+    new_name = datetime.today().isoformat() + extension
     return origin_dir.parent / new_name
 
 
