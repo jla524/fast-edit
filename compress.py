@@ -62,27 +62,31 @@ def get_recent_videos(base_dir: Path, n_days: int = 1) -> list[Path]:
     return result
 
 
-def copy_to_dir(source_dir: Path, target_dir: Path = Path.home() / "Movies") -> bool:
+def copy_to_dir(source_dir: Path, target_dir: Path = Path.home() / "Movies") -> Path:
     """
     Copy the source file into another directory
     """
     assert target_dir.is_dir()
-    command = ["cp", str(source_dir), str(target_dir)]
+    print(f"Copying {source_dir.name} to {str(target_dir)}")
+    command = ["rsync", "--progress", str(source_dir), str(target_dir)]
     process = subprocess.Popen(command)
     process.wait()
-    return process.stderr is None
+    assert process.stderr is None
+    return target_dir / source_dir.name
 
 
-def run_handbrake(source_dir: Path, preset: str = "Fast 1080p30") -> bool:
+def run_handbrake(source_dir: Path, preset: str = "Fast 1080p30") -> Path:
     """
     Use the command line to run handbrake on the source
     """
     assert _is_video(source_dir)
+    print(f"Running HandBrake on {source_dir.name}")
     new_dir = get_new_dir(source_dir)
     command = ["HandBrakeCLI", "-Z", preset, "-i", str(source_dir), "-o", str(new_dir)]
     process = subprocess.Popen(command)
     process.wait()
-    return process.stderr is None
+    assert process.stderr is None
+    return new_dir
 
 
 def unmount_volumes(volumes_dir: list[Path]) -> None:
@@ -90,15 +94,17 @@ def unmount_volumes(volumes_dir: list[Path]) -> None:
     Use the command line to unmount attached volumes
     """
     for volume in volumes_dir:
+        print(f"Unmounting {str(volume)}")
         assert volume.is_dir()
         command = ["diskutil", "unmount", str(volume)]
-        result = subprocess.Popen(command)
-        assert result.stderr is None
+        process = subprocess.Popen(command)
+        process.wait()
+        assert process.stderr is None
 
 
 if __name__ == "__main__":
     volumes = get_mounted_volumes()
     videos = [video for volume in volumes for video in get_recent_videos(volume)]
-    copied = [video for video in videos if copy_to_dir(video)]
-    compressed = [video for video in videos if run_handbrake(video)]
+    copied = [copy_to_dir(video) for video in videos]
     unmount_volumes(volumes)
+    compressed = [run_handbrake(video) for video in copied]
