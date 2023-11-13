@@ -97,21 +97,26 @@ def run_handbrake(source_dir: Path, preset: str = "Fast 1080p30") -> Path:
     return new_dir
 
 
-def unmount_volumes(volumes_dir: list[Path]) -> None:
+def unmount_volumes(volumes_dir: list[Path]) -> list[Path]:
     """
     Use the command line to unmount attached volumes
     """
+    done = []
     for volume in volumes_dir:
         logging.info(f"Unmounting {str(volume)}...")
         assert volume.is_dir(), f"{str(volume)} is not a directory"
         command = ["diskutil", "unmount", str(volume)]
         process = subprocess.Popen(command)
         process.wait()
+        done.append(volume)
+    return done
 
 
 if __name__ == "__main__":
     volumes = get_mounted_volumes()
     videos = [video for volume in volumes for video in get_recent_videos(volume)]
     copied = [copy_to_dir(video) for video in videos]
-    unmount_volumes(volumes)
+    unmounted = unmount_volumes(volumes)
+    assert len(volumes) == len(unmounted), "some volumes were not unmounted"
     compressed = [run_handbrake(video) for video in copied]
+    assert len(videos) == len(compressed), "some videos were not compressed"
