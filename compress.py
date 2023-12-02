@@ -38,8 +38,8 @@ def get_new_dir(origin_dir: Path, extension: str = ".mp4") -> Path:
     Create a new file directory with the today's date
     """
     assert origin_dir.exists(), f"{str(origin_dir)} does not exist"
-    new_name = datetime.today().isoformat() + extension
-    return origin_dir.parent / new_name
+    new_name = datetime.today().strftime("%Y%m%dT%H:%M:%S") + extension
+    return origin_dir.parent.parent / "compressed" / new_name
 
 
 def get_mounted_volumes() -> list[Path]:
@@ -72,7 +72,7 @@ def get_recent_videos(base_dir: Path, n_days: int = 1) -> list[Path]:
     return result
 
 
-def copy_to_dir(source_dir: Path, target_dir: Path = Path.home() / "Movies") -> Path:
+def copy_to_dir(source_dir: Path, target_dir: Path = Path.home() / "Movies" / "raw") -> Path:
     """
     Copy the source file into another directory
     """
